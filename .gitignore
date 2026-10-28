@@ -1,3 +1,4 @@
 .env
 /data/
 *.dbn.zst
+__pycache__/
