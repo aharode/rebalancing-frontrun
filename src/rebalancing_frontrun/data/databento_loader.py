@@ -12,10 +12,10 @@ RAW_DIR = REPO_ROOT / "data" / "raw"
 
 
 def _params(schema, symbols, stype_in, start, end):
-    return dict(
-        dataset=DATASET, schema=schema, symbols=symbols,
-        stype_in=stype_in, start=start, end=end,
-    )
+    return {
+        "dataset": DATASET, "schema": schema, "symbols": symbols,
+        "stype_in": stype_in, "start": start, "end": end,
+    }
 
 
 def _cache_path(schema, symbols, start, end):

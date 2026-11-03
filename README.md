@@ -1,5 +1,7 @@
 # Front-Running Month-End Rebalancing (ES vs. ZN)
 
+[![tests](https://github.com/aharode/rebalancing-frontrun/actions/workflows/ci.yml/badge.svg)](https://github.com/aharode/rebalancing-frontrun/actions/workflows/ci.yml)
+
 Does month-end pension rebalancing create a tradable pattern in S&P 500 vs. 10-year
 Treasury futures, and does it survive after the research documenting it?
 
@@ -24,7 +26,10 @@ A weak in-sample edge that does not persist out-of-sample.
 
 The conclusion holds under the paper's exact trade timing (in-sample net Sharpe 0.40,
 out-of-sample −0.32) and with zero transaction costs (out-of-sample Sharpe −0.08). Excluding
-2020 leaves the full-sample result unchanged, so it is not driven by the COVID crash.
+2020 leaves the full-sample result unchanged, so it is not driven by the COVID crash. The
+in-sample result is concentrated, though: 2016 alone contributed 13.6 of the 20.8 percentage
+points of in-sample net P&L, mostly from June 2016, when the month-end window began the day
+after the Brexit vote.
 
 The paper reports a Sharpe ratio above 1 for 1997–2023, but for a strategy combining two
 signals and drawing much of its return from the 2008 and 2020 crises. A Calendar-only,
