@@ -12,10 +12,13 @@ Flat on all other days. Direction uses the sign of the signal only.
 
 Two timing conventions (`timing`):
   "holding" (default): hold during the last `window` trading days of the month.
-  "paper": follow Harvey, Mazzoleni & Melone exactly. A signal observed on any
-           of the last `window` days sets the position for the NEXT day, so the
-           holding days shift by one: the last `window - 1` days of the month
-           plus the first trading day of the next month.
+  "paper": follow Harvey, Mazzoleni & Melone's Section 4 strategy. A signal
+           observed on one of the last `window` days sets the NEXT day's
+           position: front-running on the last `window - 1` days of the month,
+           then the OPPOSITE side on the first trading day of the next month,
+           where the paper finds month-end price pressure partly reverses.
+           The reversal day uses the sign of the month-end (pre-reset) signal.
+           That day counts as part of the prior month's trade.
 
 Sizing: each leg targets the same annualized volatility (`leg_vol`), using a
 trailing `vol_lookback`-day estimate, so the trade is a stock-vs-bond bet
@@ -48,8 +51,8 @@ def run_backtest(
 ) -> pd.DataFrame:
     """Daily positions and P&L.
 
-    Columns: signal_prev, active, direction (+1 = long ES / short ZN),
-    w_es, w_zn, gross, cost, net.
+    Columns: trade_month, signal_prev, active, direction
+    (+1 = long ES / short ZN), w_es, w_zn, gross, cost, net.
     """
     r = returns[["es_ret", "zn_ret"]].sort_index()
     r0 = r.fillna(0.0)  # market closures: that leg is flat for the day
@@ -62,15 +65,21 @@ def run_backtest(
     vol_zn = r0["zn_ret"].rolling(vol_lookback, min_periods=20).std().shift(1) * ann
 
     dtme = cal["days_to_month_end"]
+    flip = pd.Series(1.0, index=r.index)  # -1 on reversal days
+    reversal = pd.Series(False, index=r.index)
     if timing == "holding":
         in_window = dtme.lt(window)  # NaN (incomplete month) -> False
     elif timing == "paper":
-        in_window = dtme.shift(1).lt(window)  # yesterday was a signal day
+        dtme_prev = dtme.shift(1)
+        frontrun = dtme_prev.ge(1) & dtme_prev.lt(window)  # yesterday a signal day, same month
+        reversal = dtme_prev.eq(0)  # first trading day after a month-end
+        in_window = frontrun | reversal
+        flip = flip.where(~reversal, -1.0)
     else:
         raise ValueError(f"timing must be 'holding' or 'paper', not {timing!r}")
     active = in_window & signal_prev.notna() & vol_es.notna() & vol_zn.notna()
 
-    direction = (-np.sign(signal_prev)).where(active, 0.0)
+    direction = (-np.sign(signal_prev) * flip).where(active, 0.0)
     w_es = (direction * leg_vol / vol_es).where(active, 0.0)
     w_zn = (-direction * leg_vol / vol_zn).where(active, 0.0)
 
@@ -81,8 +90,13 @@ def run_backtest(
     turn_zn = w_zn.diff().abs().fillna(w_zn.abs())
     cost = turn_es * es_cost_bps / 1e4 + turn_zn * zn_cost_bps / 1e4
 
+    # Month each day's P&L belongs to as a trade (reversal day -> prior month)
+    period = r.index.to_period("M")
+    trade_month = pd.Series(period, index=r.index).where(~reversal, period - 1)
+
     return pd.DataFrame(
         {
+            "trade_month": trade_month,
             "signal_prev": signal_prev,
             "active": active,
             "direction": direction,
@@ -100,10 +114,10 @@ def summarize(bt: pd.DataFrame, start=None, end=None) -> pd.DataFrame:
 
     Daily stats use every trading day (flat days count as 0), which is the
     right basis for a strategy that sits in no position most of the month.
-    Per-trade stats treat each month's window as one trade.
+    Per-trade stats treat each month's window as one trade (`trade_month`).
     """
     b = bt.loc[start:end]
-    month = b.index.to_period("M")
+    month = b["trade_month"]
     traded_months = b.groupby(month)["active"].any()
     traded_months = traded_months[traded_months].index
 
