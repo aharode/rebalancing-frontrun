@@ -18,8 +18,21 @@ dependencies = [
 ]
 
 [build-system]
-requires = ["uv_build>=0.13.6,<0.14.0"]
-build-backend = "uv_build"
+requires = ["scikit-build-core>=0.10", "pybind11>=2.13"]
+build-backend = "scikit_build_core.build"
+
+[tool.scikit-build]
+minimum-version = "build-system.requires"
+build-dir = "build/{wheel_tag}"
+
+[tool.uv]
+# Rebuild the C++ extension whenever the C++ source or build config changes
+cache-keys = [
+    { file = "pyproject.toml" },
+    { file = "CMakeLists.txt" },
+    { file = "cpp/**/*.cpp" },
+    { file = "cpp/**/*.hpp" },
+]
 
 [dependency-groups]
 dev = [
