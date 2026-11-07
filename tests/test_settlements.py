@@ -56,7 +56,7 @@ def test_drops_weekend_trade_dates():
     rows = _day("2024-03-01", "ESH4", 5000.0, 1000) + _day("2024-03-02", "ESH4", 5001.0, 10)
     out = build_settlements(_stats(rows))
     es = out[out["product"] == "ES"]
-    assert (es["trade_date"].dt.dayofweek < 5).all()
+    assert (es["trade_date"].dt.day_of_week < 5).all()
     assert len(es) == 1
 
 

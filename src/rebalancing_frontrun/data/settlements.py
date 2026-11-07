@@ -55,7 +55,7 @@ def build_settlements(stats: pd.DataFrame) -> pd.DataFrame:
     df = stats.sort_index()  # index is ts_recv, so "last" = latest published
     df = df[df["ts_ref"].notna() & ~df["symbol"].str.contains("-")].copy()
     df["trade_date"] = _to_date(df["ts_ref"])
-    df = df[df["trade_date"].dt.dayofweek < 5]  # a few stray records carry weekend dates
+    df = df[df["trade_date"].dt.day_of_week < 5]  # a few stray records carry weekend dates
     df["product"] = df["symbol"].str[:2]
     df = df[df["product"].isin(PRODUCTS)]
 

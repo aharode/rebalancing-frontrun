@@ -1,7 +1,7 @@
 [project]
 name = "rebalancing-frontrun"
 version = "0.1.0"
-description = "Add your description here"
+description = "Front-running month-end 60/40 rebalancing in ES vs. ZN futures"
 readme = "README.md"
 authors = [
     { name = "Anika Harode", email = "anika.harode@gmail.com" }
