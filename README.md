@@ -114,11 +114,11 @@ exactly when every month has only one possible 5-day window.
 
 | | Python | C++ | Speedup |
 |---|---|---|---|
-| One backtest | 5.4 ms (pandas) | 1.8 ms | 3× |
-| One placebo simulation | 395 µs (vectorized NumPy) | 23 µs | 17× |
-| 10,000 placebo simulations | ~3.9 s | 0.23 s | 17× |
+| One backtest | 4.8 ms (pandas) | 1.8 ms | 3× |
+| One placebo simulation | 192 µs (vectorized NumPy) | 19 µs | 10× |
+| 10,000 placebo simulations | ~1.9 s | 0.19 s | 10× |
 
-Measured on Linux (aarch64), Python 3.11; rerun with `uv run python benchmarks/benchmark.py`.
+Measured on an Apple Silicon Mac, Python 3.11; rerun with `uv run python benchmarks/benchmark.py`.
 The single-backtest speedup is small because pandas calendar setup dominates; the placebo
 loop is where C++ helps.
 
